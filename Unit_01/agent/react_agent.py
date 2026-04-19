@@ -22,8 +22,10 @@ class ReactAgent:
     def execute_stream(self, query: str):
         """
         将得到的字符串以 迭代器 形式返回回去
+        注意：为了判别返回内容为思考标签还是文本标签 改迭代器会返回两个值
+        类型[typing] 和文本[content]
         :param query:
-        :return: type content
+        :return: typing content
         """
         input_dict = {
             "messages": [
@@ -42,19 +44,31 @@ class ReactAgent:
                         if chunk["type"] == "reasoning":
                             for summary in chunk["summary"]:
                                 pass
-                                # yield summary["text"]
+                                yield "reasoning", summary["text"]
                                 # 当前还没有思考窗口，先不输出思考内容
                         if chunk["type"] == "text":
-                            yield chunk["text"]
+                            yield "text", chunk["text"]
 
-
+# @wrap_model_call
+# def log_calling_model(request: ModelRequest, handler: Callable[[ModelRequest], ModelResponse]):
+#     print(request)
+#     print(handler)
+#     print("模型调用")
+#     return handler(request)
 if __name__ == "__main__":
     agent = ReactAgent()
     res = agent.execute_stream(query="请根据我的所在地情况，看看如何保养机器人，并生成一份报告")
 
-    for chunk in res:
-        print(chunk, end='', flush=True)
-
+    # 一个非常奇怪的现象，迭代器中的值typing，可以进行判断，但是不能输出出去，否则会提前结束程序
+    for typing, chunk in res:
+        # print(typing)
+        # print(chunk, end='', flush=True)
+        if typing == "reasoning":
+            print("   ", end='', flush=True)
+            print(chunk, end='', flush=True)
+        elif typing == "text":
+            print(" :", end='', flush=True)
+            print(chunk, end='', flush=True)
 """
 改进点：
     1. 这里流式输出其实是假流式，真正的流式参数应该是messages（具体改进方案看另一个项目中的实验）

@@ -84,7 +84,7 @@ def generate_external_data():
                 }
 
 
-@tool(description="当你想得知用户使用记录时，这个工具会很有用，获取不到时返回空字符串")
+@tool(description="当你想得知用户使用记录时，这个工具会很有用")
 def fetch_external_data(user_id: str, month: str) -> str:
     generate_external_data()
 
@@ -92,7 +92,7 @@ def fetch_external_data(user_id: str, month: str) -> str:
         return external_data[user_id][month]
     except KeyError:
         logger.warning(f"[fetch_external_data 信息查询工具警告] 未能检索到用户：{user_id} 在 {month} 的使用记录数据")
-        return ""
+        return f"[fetch_external_data 信息查询工具警告] 未能检索到用户：{user_id} 在 {month} 的使用记录数据"
 
 
 @tool(description="调用此工具将会切换为报告生模式")
@@ -102,6 +102,10 @@ def fill_context_for_report():
     :return:
     """
     return "fill_context_for_report"
+
+# @tool(description="这个工具")
+# def web_search(content: str)
+
 
 
 # if __name__ == "__main__":
