@@ -36,6 +36,11 @@ class EmbeddingModelFactory(BaseModelFactory):
         )
 
 
+class ChatMemoryModelFactory(BaseModelFactory):
+    def generator(self) -> Embeddings | BaseChatOpenAI:
+        pass
+
+
 # 当场创建两个模型对象，后续只要导入这两个变量即可获得模型（但是这种方法不太适合需要多次创建的情景）
 chat_model = ChatModelFactory().generator()
 embedding_model = EmbeddingModelFactory().generator()
