@@ -1,9 +1,9 @@
-persist_directory: chroma_db
+persist_directory: data/chroma_db
 collection_name: agent_test_01
-k: 3
+k: 5
 data_path: data
 md5_hex_store: md5.text
-allow_knowledge_file_type: ["txt", "pdf"]
+allow_knowledge_file_type: [".txt", ".pdf"]
 
 chunk_size: 200
 chunk_overlap: 20
