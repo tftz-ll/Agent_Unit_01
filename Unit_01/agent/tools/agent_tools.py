@@ -122,12 +122,12 @@ def web_search_for_report_summary(text: list[str]):
     return web_search_summarize
 
 
-# @tool(description="""这个函数用于获取报告用搜索数据
-# 参数：queries 你需要传入一个列表，里面包含多个你需要调查的问题字符串
-# 返回：一个json格式字符串，根据query， 搜索页面进行分类，使用前请务必进行一次数据整合
-# 当使用web_search_for_report这个工具时，必须将要搜索的问题拆分成多个小问题，并包装成list[str]的形式传入（如：["query1", "query2", "query3"]），
-# 这些小问题将会被这个工具分批次搜索，因此必须保证每一个小问题的语义完整，避免搜索到无关内容
-# """)
+@tool(description="""这个函数用于获取报告用搜索数据
+参数：queries 你需要传入一个列表，里面包含多个你需要调查的问题字符串
+返回：一个json格式字符串，根据query， 搜索页面进行分类，使用前请务必进行一次数据整合
+当使用web_search_for_report这个工具时，必须将要搜索的问题拆分成多个小问题，并包装成list[str]的形式传入（如：["query1", "query2", "query3"]），
+这些小问题将会被这个工具分批次搜索，因此必须保证每一个小问题的语义完整，避免搜索到无关内容
+""")
 async def web_search_for_report(queries: list[str]) -> str:
     try:
         response = await asyncio.create_task(_web_search_for_report(queries))
