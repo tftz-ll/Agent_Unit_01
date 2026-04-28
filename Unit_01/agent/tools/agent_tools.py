@@ -39,15 +39,16 @@ def get_current_month() -> str:
 你可以传入的参数有四个：
     query 你要搜索的问题，只接收字符串;
     search_mark 搜索精确度，你只能填入数字 0 或 1，默认值为0，你一般不需要修改【当填入数字为0时为基础查询，均衡速度与质量；当填入数字为1时为高精度查询，专注于精确度，此时会返回chunk字段，里面包含的是根据匹配度对原文进行的提取】
-    country 对特定国家进行搜索，默认为china，你一般不需要修改 只接受国家名称字符串小写形式，如：afghanistan, albania, algeria，除非用户指明他来自于其他国家，否则请不要更改
+    country 对特定国家进行搜索，默认为None，你一般不需要修改 只接受国家名称字符串小写形式，如：afghanistan, albania, algeria
     max_results 最大搜索结果返回值，默认值为5，你只能填入1~20范围的数字，返回的信息数量会根据这个参数变化
 返回值：
     一个字典，包含多个字段，需要额外说明的是score代表的是文本搜索结果匹配度
     """)
-def ground_web_search(query: str, search_mark=0, country='china', max_results=5):
+def ground_web_search(query: str, search_mark=0, country=None, max_results=5):
     tavily_client = TavilyClient()
     # 搜索部分
-    if search_mark != 0 or search_mark != 1:
+    search_mark = int(search_mark)
+    if search_mark in [0, 1]:
         search_depth = ['basic', 'advanced']
         response = tavily_client.search(
             query=query,
