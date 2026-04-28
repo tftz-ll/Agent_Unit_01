@@ -6,12 +6,12 @@ from langgraph.runtime import Runtime
 from typing import Callable
 from Unit_01.utils.logger_handler import logger
 from Unit_01.utils.prompt_loader import load_system_prompt, load_report_prompt
-
+import asyncio
 
 # requests 对请求函数的封装
 # handler 对模型的调用
 @wrap_tool_call
-def monitor_tool(
+async def monitor_tool(
         requests: ToolCallRequest,
         handler: Callable[[ToolCallRequest], ToolMessage | Command]
 ) -> ToolMessage | Command:
@@ -22,17 +22,18 @@ def monitor_tool(
     logger.info(f"[monitor_tool] 完成执行工具：{requests.tool_call['name']}")
     logger.info(f"[monitor_tool] 完成传入参数：{requests.tool_call['args']}")
     try:
-        result = handler(requests)  # 这个其实就是在调用工具
+        result = await handler(requests)  # 这个其实就是在调用工具
         logger.info(f"[monitor_tool] 工具{requests.tool_call['name']}调用成功")
 
         # 骚操作来了，这里将会对工具调用进行监控，如果监控到返回值fill_context_for_report说明要切换报告模式了
         if requests.tool_call['name'] == "fill_context_for_report":
             requests.runtime.context['report'] = True
-
-        return result
     except Exception as e:
-        logger.error(f"[monitor_tool] 工具{requests.tool_call['name']}调用成功 因为{str(e)}")
+        logger.error(f"[monitor_tool] 工具{requests.tool_call['name']}调用失败 因为{str(e)}")
         raise e
+    return result
+
+
 
 
 @dynamic_prompt  # 这个装饰器能够使每次agent生成提示词之前调用此函数
@@ -42,11 +43,11 @@ def report_prompt_switch(requests: ModelRequest):
     将提示词返回给agent
     :return:
     """
-    is_report = requests.runtime.context.get('report', False)
-    if is_report:
-        return load_report_prompt()
-    else:
-        return load_system_prompt()
+    # is_report = requests.runtime.context.get('report', False)
+    # if is_report:
+    #     return load_report_prompt()
+    # else:
+    return load_system_prompt()
 
 
 # AgentState 智能体的状态记录

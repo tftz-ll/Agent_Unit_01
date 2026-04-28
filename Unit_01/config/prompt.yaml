@@ -2,3 +2,4 @@
 main_prompt: prompts/main_prompt.txt
 rag_summarize_prompt_path: prompts/rag_summarize.txt
 report_prompt_path: prompts/report_prompt.txt
+web_search_summarize_prompt: prompts/web_search_summarize_prompt.txt

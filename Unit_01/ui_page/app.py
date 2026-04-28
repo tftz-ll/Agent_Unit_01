@@ -5,6 +5,31 @@ project_root = Path(__file__).parent.parent.parent  # app.py -> ui_page -> Unit_
 sys.path.insert(0, str(project_root))
 import streamlit as st
 from Unit_01.agent.react_agent import ReactAgent
+import asyncio
+
+
+async def astream(agent, query: str,
+                  reasoning_content,
+                  text_content,
+                  thinking_placeholder,
+                  text_placeholder):
+    # """
+    # 这个方法是为了兼容异步实现的输出
+    # """
+    async for typing, chunk in agent.execute_astream(query):
+        if typing == "reasoning":
+            reasoning_content += chunk
+            thinking_placeholder.markdown(reasoning_content)
+
+        elif typing == "text":
+            text_content += chunk
+            text_placeholder.markdown(text_content)
+
+    st.session_state["messages"].append(
+        {"role": "assistant", "content": text_content, "reasoning_content": reasoning_content})
+
+
+
 
 # 标题
 st.title("『奇迹与你』agent试做版")
@@ -45,25 +70,33 @@ if prompt:
             thinking_placeholder = st.empty()
         text_placeholder = st.empty()
 
-    # 获取模型响应文本迭代器
-    response = st.session_state["agent"].execute_stream(prompt)
-
     # 两个变量，分别存放思考信息和文本输出信息
     reasoning_content = ""
     text_content = ""
 
-    for typing, chunk in response:
-        # """这里双层循环而不能直接索引是因为流式输出需要等待服务器将结果放进列表之中"""
-        # 通过不断更新Markdown的方法做到流式输出的效果
-        if typing == "reasoning":
-            reasoning_content += chunk
-            thinking_placeholder.markdown(reasoning_content)
+    # 获取模型响应文本迭代器
+    asyncio.run(astream(
+        agent=st.session_state['agent'],
+        query=prompt,
+        reasoning_content=reasoning_content,
+        text_content=text_content,
+        text_placeholder=text_placeholder,
+        thinking_placeholder=thinking_placeholder
+    ))
 
-        elif typing == "text":
-            text_content += chunk
-            text_placeholder.markdown(text_content)
 
-    st.session_state["messages"].append(
-        {"role": "assistant", "content": text_content, "reasoning_content": reasoning_content})
+    # for typing, chunk in response:
+    #     # """这里双层循环而不能直接索引是因为流式输出需要等待服务器将结果放进列表之中"""
+    #     # 通过不断更新Markdown的方法做到流式输出的效果
+    #     if typing == "reasoning":
+    #         reasoning_content += chunk
+    #         thinking_placeholder.markdown(reasoning_content)
+    #
+    #     elif typing == "text":
+    #         text_content += chunk
+    #         text_placeholder.markdown(text_content)
+    #
+    # st.session_state["messages"].append(
+    #     {"role": "assistant", "content": text_content, "reasoning_content": reasoning_content})
 
 

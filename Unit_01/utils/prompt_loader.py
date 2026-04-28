@@ -45,10 +45,25 @@ def load_report_prompt():
         raise e
 
 
+def load_web_search_prompt():
+    try:
+        web_search_summarize_prompt = get_abs_path(prompt_conf["web_search_summarize_prompt"])
+    except Exception as e:
+        logger.error(f"[load_system_prompt]错误 在yaml配置中没有找到web_search_summarize_prompt配置项")
+        raise e
+
+    try:
+        return open(f"{web_search_summarize_prompt}", "r", encoding="utf-8").read()
+    except Exception as e:
+        logger.error(f"[load_report_prompt]解析报告提示词错误 文件数据解析出错, {str(e)}")
+        raise e
+
+
 if __name__ == "__main__":
     print(load_system_prompt())
     print(load_rag_prompt())
     print(load_report_prompt())
+    print(load_web_search_prompt())
 
 
 

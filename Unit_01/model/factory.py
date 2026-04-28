@@ -36,8 +36,19 @@ class EmbeddingModelFactory(BaseModelFactory):
         )
 
 
+class ChatModelFactoryLowPrice(BaseModelFactory):
+    def generator(self) -> Embeddings | BaseChatOpenAI:
+        return ChatOpenAI(
+            model=rag_conf["chat_model_name_low_price"],
+            extra_body={"enable_thinking": False},
+            base_url=rag_conf["base_url"],
+            output_version=rag_conf['output_version']
+        )
+
+
 # 当场创建两个模型对象，后续只要导入这两个变量即可获得模型（但是这种方法不太适合需要多次创建的情景）
 chat_model = ChatModelFactory().generator()
+chat_model_low_price = ChatModelFactoryLowPrice().generator()
 embedding_model = EmbeddingModelFactory().generator()
 
 """
