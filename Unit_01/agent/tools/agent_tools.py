@@ -108,10 +108,10 @@ async def _web_search_for_report(queries: list[str]):
         logger.error(f"[_web_search_for_report] 异步网页搜索函数_web_extract部分运行失败！ 因为{e}")
     finally:
         await client.close()
-    return [res for res in res_extract if not isinstance(res, Exception)]
+    return [str(res) for res in res_extract if not isinstance(res, Exception)]
 
 
-def web_search_for_report_summary(text: str):
+def web_search_for_report_summary(text: list[str]):
     """
     接收一段网页搜索文本：包含query-url-content
     通过总结模型（关闭思考模式的3.5flash版本）总结
@@ -122,27 +122,26 @@ def web_search_for_report_summary(text: str):
     return web_search_summarize
 
 
-@tool(description="""这个函数用于获取报告用搜索数据
-参数：queries 你需要传入一个列表，里面包含多个你需要调查的问题字符串
-返回：一个json格式字符串，根据query， 搜索页面进行分类，使用前请务必进行一次数据整合
-当使用web_search_for_report这个工具时，必须将要搜索的问题拆分成多个小问题，并包装成list[str]的形式传入（如：["query1", "query2", "query3"]），
-这些小问题将会被这个工具分批次搜索，因此必须保证每一个小问题的语义完整，避免搜索到无关内容
-""")
+# @tool(description="""这个函数用于获取报告用搜索数据
+# 参数：queries 你需要传入一个列表，里面包含多个你需要调查的问题字符串
+# 返回：一个json格式字符串，根据query， 搜索页面进行分类，使用前请务必进行一次数据整合
+# 当使用web_search_for_report这个工具时，必须将要搜索的问题拆分成多个小问题，并包装成list[str]的形式传入（如：["query1", "query2", "query3"]），
+# 这些小问题将会被这个工具分批次搜索，因此必须保证每一个小问题的语义完整，避免搜索到无关内容
+# """)
 async def web_search_for_report(queries: list[str]) -> str:
     try:
         response = await asyncio.create_task(_web_search_for_report(queries))
         logger.info("[web_search_for_report] 网页搜索报告工具运行成功 ")
     except Exception as e:
         logger.error(f"[web_search_for_report] 网页搜索报告工具运行失败！ 因为{e}")
-    # with open("debug.text", "w", encoding='utf-8') as f:
-    #     f.write(str(response))
+
     cnt = 1
     text = ''
     cnt_for_token = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
-    for i in response:
-        # print(i)
+
+    summarize_contents = await web_search_for_report_summary(response)
+    for summarize_content in summarize_contents:
         text += f"第{cnt}段文本["
-        summarize_content = web_search_for_report_summary(str(i))
         content = summarize_content.content[0]["text"]
         usage_metadata = summarize_content.usage_metadata
 
@@ -156,11 +155,20 @@ async def web_search_for_report(queries: list[str]) -> str:
     return f"文本召回结果：\n{text} \n工具使用token消耗：{str(cnt_for_token)}"
 
 
-# if __name__ == "__main__":
-#     res = asyncio.run(web_search_for_report(['LangChain 2026年最新版本核心更新内容', 'LangChain与LlamaIndex框架能力对比评测', 'LangChain百万级长上下文处理最佳实践']))
-#
-#     print(res)
-#     pass
+if __name__ == "__main__":
+    import time
+    start = time.perf_counter()
+    for _ in range(3):
+        res = asyncio.run(web_search_for_report(['2024年生成式AI医疗模型幻觉真实案例', '2024-2025年医疗AI医生采纳度调查报告', '2024年生成式AI医疗应用监管合规挑战案例', '2024年医疗大模型临床试验结果发表研究']))
+        print(res)
+    times = time.perf_counter() - start
+    print(f"三次运行平均耗时{times/3:.4f}s")
+    # 217 point -》233 point
+    # 记录：非异步请求模型情况下耗时 三次运行平均耗时45.8203s
+
+    # 242 point -》263 point
+    # 记录：异步请求模型情况下耗时 三次运行平均耗时16.3693s
+
 """
 改进点：
     1. 太明显了吧...
