@@ -4,9 +4,10 @@
 """
 from Unit_01.rag.vector_store import VectorStoreService
 from Unit_01.utils.prompt_loader import load_rag_prompt
-from Unit_01.model.factory import chat_model
+from Unit_01.model.factory import chat_model, chat_model_low_price
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+import json
 
 
 def print_prompt(prompt):
@@ -32,7 +33,7 @@ class RagSummarizeService(object):
         # 获取提示词模板
         self.prompt_text = load_rag_prompt()
         self.prompt_template = PromptTemplate.from_template(self.prompt_text)
-        self.model = chat_model
+        self.model = chat_model_low_price
         self.chain = self._init_chain()
 
     def _init_chain(self):
@@ -40,7 +41,7 @@ class RagSummarizeService(object):
         生成一个链
         :return:
         """
-        chain = self.prompt_template | print_prompt | self.model | StrOutputParser()
+        chain = self.prompt_template | print_prompt | self.model
         return chain
 
     def retriever_docs(self, query: str):
@@ -81,12 +82,21 @@ class RagSummarizeService(object):
                 "context": context
             }
         )
-        return res
+        content = {
+            "content": res.content[0]["text"],
+            "token": {
+                "input_tokens": res.usage_metadata["input_tokens"],
+                "output_tokens": res.usage_metadata["output_tokens"],
+                "total_tokens": res.usage_metadata["total_tokens"]
+            }
+        }
+        return json.dumps(content, ensure_ascii=False)
 
 
 if __name__ == "__main__":
     rag_summarize = RagSummarizeService().rag_summarize("哪些机器人适合打扫卫生")
     print(rag_summarize)
+    print()
     pass
 
 """

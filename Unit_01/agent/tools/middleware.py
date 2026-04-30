@@ -25,9 +25,9 @@ async def monitor_tool(
         result = await handler(requests)  # 这个其实就是在调用工具
         logger.info(f"[monitor_tool] 工具{requests.tool_call['name']}调用成功")
 
-        # 骚操作来了，这里将会对工具调用进行监控，如果监控到返回值fill_context_for_report说明要切换报告模式了
-        if requests.tool_call['name'] == "fill_context_for_report":
-            requests.runtime.context['report'] = True
+        # # 骚操作来了，这里将会对工具调用进行监控，如果监控到返回值fill_context_for_report说明要切换报告模式了
+        # if requests.tool_call['name'] == "fill_context_for_report":
+        #     requests.runtime.context['report'] = True
     except Exception as e:
         logger.error(f"[monitor_tool] 工具{requests.tool_call['name']}调用失败 因为{str(e)}")
         raise e
@@ -64,7 +64,7 @@ def log_before_model(
     :return:
     """
     logger.info(f"[log_before_model] 即将调用模型，带有{len(state['messages'])}条消息")
-
+    # logger.debug(f"[log_before_model] 即将调用模型，当前携带信息为：{state['messages']}")
     logger.debug(f"[log_before_model] {type(state['messages'][-1]).__name__} | {state['messages'][-1].content.strip()}")
     return None
 
