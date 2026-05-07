@@ -8,6 +8,7 @@ from Unit_01.rag.rag_service import RagSummarizeService
 from Unit_01.utils.config_handler import agent_conf
 from Unit_01.utils.path_tool import get_abs_path
 from Unit_01.utils.logger_handler import logger
+from Unit_01.concern_hub.hub import a_token_for_count
 import random
 from tavily import TavilyClient, AsyncTavilyClient
 import asyncio
@@ -161,6 +162,7 @@ async def _web_extract(urls, query, chunks_per_source=2, client=None):
         raise e
     return response
 
+
 def log_and_return(x):
     """
     测试用函数
@@ -250,13 +252,14 @@ async def web_search_for_report(queries: list[str]) -> str:
         text += f"第{cnt}段文本["
         content = summarize_content.content[0]["text"]
         usage_metadata = summarize_content.usage_metadata
-
         cnt_for_token['input_tokens'] += usage_metadata["input_tokens"]
         cnt_for_token['output_tokens'] += usage_metadata["output_tokens"]
         cnt_for_token['total_tokens'] += usage_metadata["total_tokens"]
         text += str(content)
         text += "]\n"
         cnt += 1
+    await a_token_for_count(cnt_for_token)
+
     logger.info(f"[web_search_for_report] 本次工具使用Token消耗量为: {cnt_for_token}")
     return f"文本召回结果：\n{text} \n工具使用token消耗：{str(cnt_for_token)}"
 

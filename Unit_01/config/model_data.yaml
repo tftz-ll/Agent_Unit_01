@@ -1,7 +1,7 @@
 # 百炼平台模型
 chat_model_name : qwen3.5-plus
-chat_model_name_low_price : qwen3.5-plus-2026-02-15
+chat_model_name_low_price : qwen3.5-flash-2026-02-23
 base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
 embedding_model_name : text-embedding-v4
 output_version : responses/v1
-chat_model_ollama: Huihui-Qwen3.5-9B-abliterated.i1-IQ4_XS:latest
+chat_model_ollama: qwen3.5:9b

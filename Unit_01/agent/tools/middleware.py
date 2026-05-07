@@ -3,13 +3,16 @@ from langchain.tools.tool_node import ToolCallRequest
 from langchain_core.messages import ToolMessage
 from langgraph.types import Command
 from langgraph.runtime import Runtime
+from langchain_core.callbacks import BaseCallbackHandler
 from typing import Callable
 from Unit_01.utils.logger_handler import logger
 from Unit_01.utils.prompt_loader import load_system_prompt, load_report_prompt
+from langsmith import traceable
 import asyncio
 
 # requests 对请求函数的封装
 # handler 对模型的调用
+
 @wrap_tool_call
 async def monitor_tool(
         requests: ToolCallRequest,
@@ -70,7 +73,32 @@ def log_before_model(
 
 
 
+# async def my_async_generator(query_params: dict) -> Iterable:
+#     async with httpx.AsyncClient() as http_client:
+#         response = await http_client.get(
+#             "https://api.example.com/data",
+#             params=query_params,
+#         )
+#         for item in response.json():
+#             yield item
+#
+#
+# async def async_code():
+#     async for item in my_async_generator({"param": "value"}):
+#         print(item)
+
+
+
+
 """
+qwen3.5-flash-2026-02-23
+(AIMessageChunk(content=[], 
+additional_kwargs={}, response_metadata={'created_at': 1778140064.0, 'model': 'qwen3.5-flash-2026-02-23', 'object': 'response', 'status': 'completed', 'model_provider': 'openai', 'model_name': 'qwen3.5-flash-2026-02-23'}, id='lc_run--019e0168-28b7-7d70-bf41-54b1746e8944', tool_calls=[], invalid_tool_calls=[], usage_metadata={'input_tokens': 362, 'output_tokens': 123, 'total_tokens': 485, 'input_token_details': {'cache_read': 0}, 'output_token_details': {'reasoning': 72}}, tool_call_chunks=[], chunk_position='last'), {'langgraph_step': 3, 'langgraph_node': 'model', 'langgraph_triggers': ('branch:to:model',), 'langgraph_path': ('__pregel_pull', 'model'), 'langgraph_checkpoint_ns': 'model:f73a9a0b-dcef-caa5-5b53-0726c59f8d05', 'checkpoint_ns': 'model:f73a9a0b-dcef-caa5-5b53-0726c59f8d05', 'ls_provider': 'openai', 'ls_model_name': 'qwen3.5-flash-2026-02-23', 'ls_model_type': 'chat', 'ls_temperature': None})
+
+
+qwen3.5-plus
+(AIMessageChunk(content=[{'type': 'text', 'text': '时小心路滑', 'index': 1}], additional_kwargs={}, response_metadata={'model_provider': 'openai'}, id='lc_run--019e0094-f846-7340-aeed-ef7fdaa49083', tool_calls=[], invalid_tool_calls=[], tool_call_chunks=[]), {'langgraph_step': 3, 'langgraph_node': 'model', 'langgraph_triggers': ('branch:to:model',), 'langgraph_path': ('__pregel_pull', 'model'), 'langgraph_checkpoint_ns': 'model:4f6472ed-9358-718d-99d2-02e1ff0d2123', 'checkpoint_ns': 'model:4f6472ed-9358-718d-99d2-02e1ff0d2123', 'ls_provider': 'openai', 'ls_model_name': 'qwen3.5-plus', 'ls_model_type': 'chat', 'ls_temperature': None})
+
 改进点：
     1. 以后或许可以通过修饰器监控的方法将获取token消耗
     2. 通过监控用户剩余token量对模型进行切换（降智操作）

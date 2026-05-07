@@ -5,6 +5,7 @@
 from Unit_01.rag.vector_store import VectorStoreService
 from Unit_01.utils.prompt_loader import load_rag_prompt
 from Unit_01.model.factory import chat_model, chat_model_low_price
+from Unit_01.concern_hub.hub import s_token_for_count
 from langchain_core.prompts import PromptTemplate
 import json
 
@@ -81,6 +82,7 @@ class RagSummarizeService(object):
                 "context": context
             }
         )
+        s_token_for_count(res.usage_metadata)
         content = {
             "content": res.content[0]["text"],
             "token": {

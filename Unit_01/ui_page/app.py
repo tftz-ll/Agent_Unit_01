@@ -4,7 +4,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent  # app.py -> ui_page -> Unit_01 -> Agent_Unit_01
 sys.path.insert(0, str(project_root))
 import streamlit as st
+import copy
 from Unit_01.agent.react_agent import ReactAgent
+from Unit_01.concern_hub.hub import token_cnt, clear_token_cnt
 import asyncio
 
 
@@ -12,7 +14,8 @@ async def astream(agent, query: str,
                   reasoning_content,
                   text_content,
                   thinking_placeholder,
-                  text_placeholder):
+                  text_placeholder,
+                  token_expression):
     # """
     # 这个方法是为了兼容异步实现的输出
     # """
@@ -25,10 +28,25 @@ async def astream(agent, query: str,
             text_content += chunk
             text_placeholder.markdown(text_content)
 
+    # 输出流程执行结束，将历史信息保存到st.session_state中，显示到页面上
+    a = token_cnt['current_token_cnt']['input_tokens']
+    b = token_cnt['current_token_cnt']['output_tokens']
+    c = token_cnt['current_token_cnt']['total_tokens']
+    token_expression.caption(
+        f"输入token：{a} 输出tokens：{b} 总tokens：{c}"
+    )
+
     st.session_state["messages"].append(
-        {"role": "assistant", "content": text_content, "reasoning_content": reasoning_content})
-
-
+        {"role": "assistant",
+         "content": text_content,
+         "reasoning_content": reasoning_content,
+         "tokens": {
+             "input_tokens": copy.deepcopy(a),
+             "output_tokens": copy.deepcopy(b),
+             "total_tokens": copy.deepcopy(c),
+         }
+         })
+    clear_token_cnt()
 
 
 # 标题
@@ -54,6 +72,9 @@ for messages in st.session_state["messages"]:
             with st.expander("Thinking..."):
                 st.write(messages["reasoning_content"])
             st.write(messages["content"])
+            st.caption(
+                f"输入token：{messages['tokens']['input_tokens']} 输出tokens：{messages['tokens']['output_tokens']} 总tokens：{messages['tokens']['total_tokens']}"
+            )
 
 # 用户输入提示词
 prompt = st.chat_input()
@@ -70,6 +91,7 @@ if prompt:
             thinking_placeholder = st.empty()
         text_placeholder = st.empty()
 
+        token_expression = st.empty()
     # 两个变量，分别存放思考信息和文本输出信息
     reasoning_content = ""
     text_content = ""
@@ -81,22 +103,9 @@ if prompt:
         reasoning_content=reasoning_content,
         text_content=text_content,
         text_placeholder=text_placeholder,
-        thinking_placeholder=thinking_placeholder
+        thinking_placeholder=thinking_placeholder,
+        token_expression=token_expression
     ))
 
-
-    # for typing, chunk in response:
-    #     # """这里双层循环而不能直接索引是因为流式输出需要等待服务器将结果放进列表之中"""
-    #     # 通过不断更新Markdown的方法做到流式输出的效果
-    #     if typing == "reasoning":
-    #         reasoning_content += chunk
-    #         thinking_placeholder.markdown(reasoning_content)
-    #
-    #     elif typing == "text":
-    #         text_content += chunk
-    #         text_placeholder.markdown(text_content)
-    #
-    # st.session_state["messages"].append(
-    #     {"role": "assistant", "content": text_content, "reasoning_content": reasoning_content})
 
 
