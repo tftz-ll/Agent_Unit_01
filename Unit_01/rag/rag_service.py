@@ -6,7 +6,6 @@ from Unit_01.rag.vector_store import VectorStoreService
 from Unit_01.utils.prompt_loader import load_rag_prompt
 from Unit_01.model.factory import chat_model, chat_model_low_price
 from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 import json
 
 

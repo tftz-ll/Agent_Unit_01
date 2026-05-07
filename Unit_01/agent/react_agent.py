@@ -4,7 +4,7 @@
 import asyncio
 
 from langchain.agents import create_agent
-from Unit_01.model.factory import chat_model
+from Unit_01.model.factory import chat_model, chat_model_ollama
 from Unit_01.utils.prompt_loader import load_system_prompt
 from Unit_01.agent.tools.agent_tools import (rag_summarize, get_weather, get_current_month, ground_web_search,
                                              web_search_for_report, async_extract_webpage, async_map_webpage,
@@ -90,15 +90,53 @@ class ReactAgent:
                             # print()
                             yield "text", chunk["text"]
 
-# @wrap_model_call
-# def log_calling_model(request: ModelRequest, handler: Callable[[ModelRequest], ModelResponse]):
-#     print(request)
-#     print(handler)
-#     print("模型调用")
-#     return handler(request)
+
+class ReactAgentOllama:
+    def __init__(self):
+        self.agent = create_agent(
+            model=chat_model_ollama,
+            system_prompt=load_system_prompt(),
+            tools=[rag_summarize, get_weather, get_current_month, ground_web_search, web_search_for_report,
+                   async_extract_webpage, async_map_webpage, crawl_web_page],
+            middleware=[monitor_tool, log_before_model, report_prompt_switch],
+        )
+
+    async def execute_astream(self, query: str):
+        """
+        效果和上面的函数一样，但这个方法是异步的
+        类型[typing] 和文本[content]
+        :param query:
+        :return: typing content
+        """
+        input_dict = {
+            "messages": [
+                {"role": "user", "content": query},
+            ]
+        }
+
+        res = self.agent.astream(input_dict, stream_mode=["messages"], context={'report': False})
+
+        async for messages in res:
+            for j in messages:
+                if isinstance(j, str):
+                    continue
+
+                content = j[0]
+                metadata = j[-1]
+                if type(content).__name__ == "ToolMessage":
+                    continue
+                additional_kwargs = getattr(content, "additional_kwargs")
+                context = getattr(content, "content")
+                reasoning = additional_kwargs.get("reasoning_content", "")
+                if reasoning != "":
+                    print(reasoning, end='', flush=True)
+                else:
+                    print(context, end='', flush=True)
+
+
 if __name__ == "__main__":
-    agent = ReactAgent()
-    res = asyncio.run(agent.execute_astream(query="你的知识库中有什么内容"))
+    agent = ReactAgentOllama()
+    res = asyncio.run(agent.execute_astream(query="明天山东济南的山东财经大学附近天气如何"))
 
     # async def astream(agent, query: str):
     #     async for typing, chunk in agent.execute_astream(query):
@@ -112,16 +150,6 @@ if __name__ == "__main__":
     #             print(chunk, end='', flush=True)
     #
     # asyncio.run(astream(agent, "你的知识库中有什么内容"))
-    # 一个非常奇怪的现象，迭代器中的值typing，可以进行判断，但是不能输出出去，否则会提前结束程序
-    # for typing, chunk in res:
-    #     # print(typing)
-    #     # print(chunk, end='', flush=True)
-    #     if typing == "reasoning":
-    #         print("   ", end='', flush=True)
-    #         print(chunk, end='', flush=True)
-    #     elif typing == "text":
-    #         print(" :", end='', flush=True)
-    #         print(chunk, end='', flush=True)
 """
 改进点：
     1. 这里流式输出其实是假流式，真正的流式参数应该是messages（具体改进方案看另一个项目中的实验）

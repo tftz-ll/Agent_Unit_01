@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from langchain_core.embeddings import Embeddings
+from langchain_ollama import ChatOllama
 from langchain_openai.chat_models.base import BaseChatOpenAI
 from langchain_community.embeddings import DashScopeEmbeddings
 from langchain_openai.chat_models import ChatOpenAI
-from Unit_01.utils.config_handler import rag_conf
+from Unit_01.utils.config_handler import load_model_data_config
+from langchain_ollama.chat_models import ChatOllama
+from langchain_ollama.chat_models import ChatOllama, BaseChatModel
 
 
 class BaseModelFactory(ABC):
@@ -21,28 +24,38 @@ class BaseModelFactory(ABC):
 
 
 class ChatModelFactory(BaseModelFactory):
-    def generator(self) -> Embeddings | BaseChatOpenAI:
+    def generator(self) -> Embeddings | BaseChatOpenAI | BaseChatModel:
         return ChatOpenAI(
-            model=rag_conf["chat_model_name"],
-            base_url=rag_conf["base_url"],
-            output_version=rag_conf['output_version']
+            model=load_model_data_config["chat_model_name"],
+            base_url=load_model_data_config["base_url"],
+            output_version=load_model_data_config['output_version']
         )
 
 
 class EmbeddingModelFactory(BaseModelFactory):
-    def generator(self) -> Embeddings | BaseChatOpenAI:
+    def generator(self) -> Embeddings | BaseChatOpenAI | BaseChatModel:
         return DashScopeEmbeddings(
-            model=rag_conf["embedding_model_name"]
+            model=load_model_data_config["embedding_model_name"]
         )
 
 
 class ChatModelFactoryLowPrice(BaseModelFactory):
-    def generator(self) -> Embeddings | BaseChatOpenAI:
+    def generator(self) -> Embeddings | BaseChatOpenAI | BaseChatModel:
         return ChatOpenAI(
-            model=rag_conf["chat_model_name_low_price"],
+            model=load_model_data_config["chat_model_name_low_price"],
             extra_body={"enable_thinking": False},
-            base_url=rag_conf["base_url"],
-            output_version=rag_conf['output_version']
+            base_url=load_model_data_config["base_url"],
+            output_version=load_model_data_config['output_version']
+        )
+
+
+class ChatModelFactoryOllama(BaseModelFactory):
+    def generator(self) -> ChatOllama:
+        return ChatOllama(
+            model=load_model_data_config["chat_model_ollama"],
+            reasoning=True,
+            num_ctx=32768,  # 32K 安全，实测 6.96GB 峰值显存
+            num_predict=2048,
         )
 
 
@@ -50,7 +63,7 @@ class ChatModelFactoryLowPrice(BaseModelFactory):
 chat_model = ChatModelFactory().generator()
 chat_model_low_price = ChatModelFactoryLowPrice().generator()
 embedding_model = EmbeddingModelFactory().generator()
-
+chat_model_ollama = ChatModelFactoryOllama().generator()
 """
 改进点：
     开启思考模式

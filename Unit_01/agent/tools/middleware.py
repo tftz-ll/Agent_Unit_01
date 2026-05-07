@@ -30,7 +30,7 @@ async def monitor_tool(
         #     requests.runtime.context['report'] = True
     except Exception as e:
         logger.error(f"[monitor_tool] 工具{requests.tool_call['name']}调用失败 因为{str(e)}")
-        raise e
+        # raise e
     return result
 
 
