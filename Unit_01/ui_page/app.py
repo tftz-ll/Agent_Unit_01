@@ -51,6 +51,13 @@ async def astream(agent, query: str,
 
 # 标题
 st.title("『奇迹与你』agent试做版")
+
+st.caption(
+            f"当前总token消耗详情--"
+            f"输入token：{token_cnt['total_token_cnt']['input_tokens']} "
+            f"输出tokens：{token_cnt['total_token_cnt']['output_tokens']} "
+            f"总tokens：{token_cnt['total_token_cnt']['total_tokens']}"
+            )
 st.divider()
 
 if 'agent' not in st.session_state:
@@ -73,7 +80,9 @@ for messages in st.session_state["messages"]:
                 st.write(messages["reasoning_content"])
             st.write(messages["content"])
             st.caption(
-                f"输入token：{messages['tokens']['input_tokens']} 输出tokens：{messages['tokens']['output_tokens']} 总tokens：{messages['tokens']['total_tokens']}"
+                f"输入token：{messages['tokens']['input_tokens']} "
+                f"输出tokens：{messages['tokens']['output_tokens']} "
+                f"总tokens：{messages['tokens']['total_tokens']}"
             )
 
 # 用户输入提示词
@@ -106,6 +115,7 @@ if prompt:
         thinking_placeholder=thinking_placeholder,
         token_expression=token_expression
     ))
+    st.rerun()
 
 
 
