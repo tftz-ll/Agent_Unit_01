@@ -1,5 +1,5 @@
 # 百炼平台模型
-chat_model_name : qwen3.5-plus
+chat_model_name : qwen3.5-27b
 chat_model_name_low_price : qwen3.5-flash-2026-02-23
 base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
 embedding_model_name : text-embedding-v4

@@ -88,6 +88,8 @@ for messages in st.session_state["messages"]:
 # 用户输入提示词
 prompt = st.chat_input()
 
+import time
+time.sleep(6)
 if prompt:
     # 用户对话栏输出
     st.chat_message("user").write(prompt)

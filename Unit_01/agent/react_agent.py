@@ -7,9 +7,9 @@ from langchain.agents import create_agent
 from Unit_01.model.factory import chat_model, chat_model_ollama
 from Unit_01.utils.config_handler import load_model_data_config
 from Unit_01.utils.prompt_loader import load_system_prompt
-from Unit_01.agent.tools.agent_tools import (rag_summarize, get_weather, get_current_month, ground_web_search,
+from Unit_01.agent.tools.agent_tools import (rag_summarize, weather_report, get_current_month, ground_web_search,
                                              web_search_for_report, async_extract_webpage, async_map_webpage,
-                                             crawl_web_page)
+                                             crawl_web_page, ipython)
 from Unit_01.agent.tools.middleware import monitor_tool, log_before_model, report_prompt_switch
 from Unit_01.concern_hub.hub import a_token_for_count
 from langsmith import traceable, get_current_run_tree
@@ -20,8 +20,8 @@ class ReactAgent:
         self.agent = create_agent(
             model=chat_model,
             system_prompt=load_system_prompt(),
-            tools=[rag_summarize, get_weather, get_current_month, ground_web_search, web_search_for_report,
-                   async_extract_webpage, async_map_webpage, crawl_web_page],
+            tools=[rag_summarize, weather_report, get_current_month, ground_web_search, web_search_for_report,
+                   async_extract_webpage, async_map_webpage, crawl_web_page, ipython],
             middleware=[monitor_tool, log_before_model, report_prompt_switch],
         )
         # 创建一个字段，用于langsmith进行token计算，
@@ -115,8 +115,8 @@ class ReactAgentOllama:
         self.agent = create_agent(
             model=chat_model_ollama,
             system_prompt=load_system_prompt(),
-            tools=[rag_summarize, get_weather, get_current_month, ground_web_search, web_search_for_report,
-                   async_extract_webpage, async_map_webpage, crawl_web_page],
+            tools=[rag_summarize, weather_report, get_current_month, ground_web_search, web_search_for_report,
+                   async_extract_webpage, async_map_webpage, crawl_web_page, ipython],
             middleware=[monitor_tool, log_before_model, report_prompt_switch],
         )
 

@@ -1,19 +1,49 @@
-"""
-当前文件中大量工具基本都是假的
-"""
-import os.path
-import json
 from langchain_core.tools import tool
 from Unit_01.rag.rag_service import RagSummarizeService
 from Unit_01.utils.config_handler import agent_conf
 from Unit_01.utils.path_tool import get_abs_path
 from Unit_01.utils.logger_handler import logger
+from Unit_01.agent.tools.tool_model import web_search_summarize_model
 from Unit_01.concern_hub.hub import a_token_for_count
 import random
 from tavily import TavilyClient, AsyncTavilyClient
+from typing import Literal
 import asyncio
 import time
-from Unit_01.agent.tools.tool_model import web_search_summarize_model
+import requests
+import sys
+import os
+import io
+import os.path
+import json
+
+@tool(description="""
+这是一个python程序运行沙盒，你可以把它当作一个python执行文件
+传入参数：
+    code : 你需要将你想执行的python代码填入这里
+返回：
+    代码的输出结果
+注意！如果你想知道
+""")
+def ipython(code: str):
+    """
+    exec实现的python沙盒，使得大模型也拥有代码运行功能
+    """
+    # 创建一个假文件buffer模拟终端接受内容
+    buffer = io.StringIO()
+    # 将输出流重定向到buffer文件中，后续的输出将存入该文件中
+    sys.stdout = buffer
+    namespace = {}
+    try:
+        exec(code, {}, namespace)
+    except Exception as e:
+        return f"Error executing code: {str(e)}"
+    finally:
+        # 恢复输出定位
+        sys.stdout = sys.__stdout__
+        out_put = buffer.getvalue()
+        buffer.close()
+    return out_put
 
 
 @tool(description="当你想要查询一些知识库中的知识时，这个工具会很有用")
@@ -22,15 +52,39 @@ def rag_summarize(query: str) -> str:
     return rag.rag_summarize(query)
 
 
-@tool(description="当你想要查询天气时，这个工具会很有用")
-def get_weather(city: str) -> str:
-    return f"城市{city}为晴天， 气温26摄制度， 降雨几率百分之60， 南方3级"
+@tool(description="""
+这是一个天气查询工具，可以查询实时天气，也可以查询天气预报
+参数说明：
+    city_adcode：必填参数 请在这里输入你要查询的城市adcode编码
+    extension：传入 all 或者是 base，默认 base，当传入参数base时为实时天气查询，传入参数为all时为天气预报查询
+""")
+def weather_report(city_adcode: int, extension: Literal["base", "all"] = "base"):
+    key = f"&key={os.getenv("高德-天气查询")}"
+    extensions = f"&extensions={extension}"
+    city = f"city={str(city_adcode)}"
+    url = "https://restapi.amap.com/v3/weather/weatherInfo?" + city + key
+    if extension:
+        url += extensions
+    try:
+        res = requests.get(url)
+        content = res.content.decode("utf-8")
+        print(type(content))
+    except Exception as e:
+        logger.error(f"天气查询错误，因为：{str(e)}")
+        return f"天气查询错误，因为：{str(e)}"
+
+    weather = eval(content)
+    if weather["status"] == "1":
+        return f"天查询成功，结果为：{str(weather)}"
+    elif weather["status"] == "0":
+        return "天气查询错误，请联系工作人员"
 
 
 @tool(description="调用这个函数，你将能够获得当前日期时间")
 def get_current_month() -> str:
     content_time = time.localtime(time.time())
-    return f"当前时间为: \n{content_time[0]}年 {content_time[1]}月 {content_time[2]}日 {content_time[3]}时 {content_time[4]}分 {content_time[5]}秒"
+    return (f"当前时间为: \n{content_time[0]}年 {content_time[1]}月 {content_time[2]}日 "
+            f"{content_time[3]}时 {content_time[4]}分 {content_time[5]}秒")
 
 
 @tool(description="""
@@ -161,14 +215,6 @@ async def _web_extract(urls, query, chunks_per_source=2, client=None):
         logger.error(f"[_web_extract 异步提取函数错误] 因为：{e} (网页无法打开)")
         raise e
     return response
-
-
-def log_and_return(x):
-    """
-    测试用函数
-    """
-    print(x)
-    return x
 
 
 # """这个函数是一个异步实现的网页搜寻函数"""
